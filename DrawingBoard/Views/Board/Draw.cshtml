@@ -1,0 +1,337 @@
+﻿@model Board
+
+@{
+    ViewData["Title"] = "Draw";
+    var drawingElements = (List<DrawingBoard.Models.DrawingElement>)ViewBag.DrawingElements;
+    var boardId = ViewBag.BoardId;
+}
+
+<div class="drawing-board-container">
+    <div class="back-button-container">
+        <form asp-action="Index" asp-controller="Board">
+            <input type="submit" value="Back to boards" class="btn btn-outline-secondary" />
+        </form>
+    </div>
+    <div style="margin-left: 10%; margin-right: 10%; margin-top: 10px; margin-bottom: 10px">
+        <button class="draw-buttons" id="pencil">
+            <i class="bi bi-pencil"></i>
+        </button>
+        <button class="draw-buttons" id="line">
+            <i class="bi bi-dash"></i>
+        </button>
+        <button class="draw-buttons" id="rectangle">
+            <i class="bi bi-app"></i>
+        </button>
+        <button class="draw-buttons" id="circle">
+            <i class="bi bi-circle"></i>
+        </button>
+        <button class="draw-buttons" id="eraser">
+            <i class="bi bi-eraser-fill"></i>
+        </button>
+        <button class="draw-buttons" id="text">
+            <i class="bi bi-type"></i>
+        </button>
+        <input type="range" id="sizeSlider" min="1" max="20" step="1" value="1">
+        <input type="color" id="colorPicker" value="#000000" />
+        <button class="btn btn-outline-success" style="margin-left:40px" id="save">Save</button>
+        <button class="btn btn-outline-danger" style="margin-left:40px" id="clearBoard">Clear the board</button>
+    </div>
+
+    <div style="display:none;">
+        <img id="img" src="@ViewBag.ImageData">
+    </div>
+    <canvas id="drawingCanvas"></canvas>
+    <form id="saveForm" method="post" asp-action="SaveDrawing" asp-controller="Board" enctype="multipart/form-data">
+        <input type="hidden" name="boardId" value="@Model.Id" />
+    </form> 
+</div>
+
+<script>
+    const canvas = document.getElementById("drawingCanvas");
+    const context = canvas.getContext("2d");
+    const colorPicker = document.getElementById("colorPicker");
+    const sizeSlider = document.getElementById("sizeSlider");
+
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/boardHub")
+        .build();
+
+    connection.start().catch(function (err) {
+        return console.error(err.toString());
+    });
+
+    connection.on("ReceiveDrawing", function (user, drawingData) {
+        const drawing = JSON.parse(drawingData);
+        if (drawing && drawing.length) {
+            shapes.push(...drawing);
+            redrawSavedShapes();
+        }
+    });
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const image = document.getElementById("img");
+    image.addEventListener("load", () => {
+        redrawSavedShapes();
+    });
+
+    let drawing = false;
+    let tool = "pencil";
+    let startX, startY;
+
+    const shapes = @Html.Raw(Json.Serialize(drawingElements));
+
+    document.getElementById("pencil").addEventListener("click", () => tool = "pencil");
+    document.getElementById("line").addEventListener("click", () => tool = "line");
+    document.getElementById("rectangle").addEventListener("click", () => tool = "rectangle");
+    document.getElementById("circle").addEventListener("click", () => tool = "circle");
+    document.getElementById("eraser").addEventListener("click", () => tool = "eraser");
+
+    sizeSlider.addEventListener("input", updateLineWidth);
+
+    function updateLineWidth() {
+        context.lineWidth = sizeSlider.value;
+    }
+
+    canvas.addEventListener("mousedown", startDrawing);
+    canvas.addEventListener("mouseup", stopDrawing);
+    canvas.addEventListener("mousemove", draw);
+
+    function startDrawing(e) {
+        drawing = true;
+        startX = e.clientX - canvas.offsetLeft;
+        startY = e.clientY - canvas.offsetTop;
+        context.beginPath();
+        context.moveTo(startX, startY);
+    }
+
+    function stopDrawing(e) {
+        if (!drawing) return;
+        drawing = false;
+        context.closePath();
+
+        const currentX = e.clientX - canvas.offsetLeft;
+        const currentY = e.clientY - canvas.offsetTop;
+
+        if (tool !== "pencil" && tool !== "eraser") {
+            shapes.push({
+                tool,
+                startX,
+                startY,
+                endX: currentX,
+                endY: currentY,
+                color: tool === "eraser" ? "#FFFFFF" : colorPicker.value,
+                lineWidth: sizeSlider.value
+            });
+            redrawSavedShapes();
+        }
+
+        const drawingData = {
+            tool,
+            color: colorPicker.value,
+            lineWidth: context.lineWidth,
+            startX,
+            startY,
+            endX: currentX,
+            endY: currentY
+        };
+
+        connection.invoke("SendDrawing", "User1", JSON.stringify([drawingData])).catch(function (err) {
+            return console.error(err.toString());
+        });
+    }
+
+    function draw(e) {
+        if (!drawing) return;
+
+        context.strokeStyle = tool === "eraser" ? "#FFFFFF" : colorPicker.value;
+        context.lineCap = "round";
+        context.lineWidth = sizeSlider.value;
+
+        const currentX = e.clientX - canvas.offsetLeft;
+        const currentY = e.clientY - canvas.offsetTop;
+
+        if (tool === "pencil" || tool === "eraser") {
+            context.lineTo(currentX, currentY);
+            context.stroke();
+            context.beginPath();
+            context.moveTo(currentX, currentY);
+
+            shapes.push({
+                tool,
+                startX,
+                startY,
+                endX: currentX,
+                endY: currentY,
+                color: tool === "eraser" ? "#FFFFFF" : colorPicker.value,
+                lineWidth: sizeSlider.value
+            });
+
+            startX = currentX;
+            startY = currentY;
+        } else {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            redrawSavedShapes();
+
+            context.save();
+
+            switch (tool) {
+                case "line":
+                    context.beginPath();
+                    context.moveTo(startX, startY);
+                    context.lineTo(currentX, currentY);
+                    context.stroke();
+                    context.closePath();
+                    break;
+                case "rectangle":
+                    context.beginPath();
+                    context.rect(startX, startY, currentX - startX, currentY - startY);
+                    context.stroke();
+                    context.closePath();
+                    break;
+                case "circle":
+                    context.beginPath();
+                    const radiusX = Math.abs(currentX - startX) / 2;
+                    const radiusY = Math.abs(currentY - startY) / 2;
+                    const centerX = (currentX + startX) / 2;
+                    const centerY = (currentY + startY) / 2;
+                    context.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, 2 * Math.PI);
+                    context.stroke();
+                    context.closePath();
+                    break;
+                default:
+                    break;
+            }
+
+            context.restore();
+        }
+
+        const drawingData = {
+            tool,
+            color: colorPicker.value,
+            lineWidth: context.lineWidth,
+            x: currentX,
+            y: currentY
+        };
+        connection.invoke("SendDrawing", "User1", JSON.stringify(drawingData)).catch(function (err) {
+            return console.error(err.toString());
+        });
+    }
+
+    function redrawSavedShapes() {
+        shapes.forEach(shape => {
+            context.strokeStyle = shape.color;
+            context.lineWidth = shape.lineWidth;
+            context.lineCap = "round";
+
+            switch (shape.tool) {
+                case "pencil":
+                case "eraser":
+                    context.beginPath();
+                    context.moveTo(shape.startX, shape.startY);
+                    context.lineTo(shape.endX, shape.endY);
+                    context.stroke();
+                    context.closePath();
+                    break;
+                case "line":
+                    context.beginPath();
+                    context.moveTo(shape.startX, shape.startY);
+                    context.lineTo(shape.endX, shape.endY);
+                    context.stroke();
+                    context.closePath();
+                    break;
+                case "rectangle":
+                    context.beginPath();
+                    context.rect(shape.startX, shape.startY, shape.endX - shape.startX, shape.endY - shape.startY);
+                    context.stroke();
+                    context.closePath();
+                    break;
+                case "circle":
+                    context.beginPath();
+                    const radiusX = Math.abs(shape.endX - shape.startX) / 2;
+                    const radiusY = Math.abs(shape.endY - shape.startY) / 2;
+                    const centerX = (shape.endX + shape.startX) / 2;
+                    const centerY = (shape.endY + shape.startY) / 2;
+                    context.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, 2 * Math.PI);
+                    context.stroke();
+                    context.closePath();
+                    break;
+                default:
+                    break;
+            }
+        });
+    }
+
+    document.getElementById('save').addEventListener('click', function () {
+        const canvasDataUrl = canvas.toDataURL('image/png');
+        const base64Data = canvasDataUrl.split(',')[1];
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+
+        const drawingSaveModel = {
+            boardId: @boardId,
+            drawingData: Array.from(byteArray),
+            shapes: shapes
+        };
+
+        fetch('@Url.Action("SaveDrawing", "Board")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(drawingSaveModel)
+        }).then(response => {
+            if (response.ok) {
+                alert('Drawing saved successfully!');
+            } else {
+                alert('Failed to save drawing.');
+            }
+        }).catch(error => {
+            console.error('Error saving drawing:', error);
+            alert('Error saving drawing.');
+        });
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        fetch('@Url.Action("GetDrawingElements", "Board", new { id = @boardId })')
+            .then(response => response.json())
+            .then(data => {
+                shapes.push(...data);
+                redrawSavedShapes();
+            })
+            .catch(error => console.error('Error loading drawing elements:', error));
+    });
+
+    const clearBoardButton = document.getElementById("clearBoard");
+
+    clearBoardButton.addEventListener('click', function () {
+        const boardId = @Model.Id;
+        console.log(boardId);
+
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        shapes.length = 0;
+
+        fetch('@Url.Action("ClearBoard", "Board")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(boardId)
+        }).then(response => {
+            if (response.ok) {
+                alert('Board cleared successfully!');
+            } else {
+                alert('Failed to clear board.');
+            }
+        }).catch(error => {
+            console.error('Error clearing board:', error);
+            alert('Error clearing board.');
+        });
+    });
+</script>

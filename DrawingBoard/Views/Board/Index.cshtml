@@ -1,0 +1,58 @@
+﻿@model (List<DrawingBoard.Models.Board> boards, List<string> images)
+
+@{
+    ViewData["Title"] = "Boards";
+}
+
+<div class="board-list-header">
+    <h4>Boards</h4>
+</div>
+
+@if (!Model.boards.Any())
+{
+    <div style="margin: 20%; width: 50%; text-align: center">
+        <h4>You don't have any boards yet.</h4>
+        <h5>To create a document, please, click the "+" icon</h5>
+    </div>
+}
+else
+{
+    <table class="table mt-5">
+        <thead>
+            <tr>
+                <th>
+                    Thumbnail
+                </th>
+                <th>
+                    Title
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.images.Count; i++)
+            {
+                <tr>
+                    <td>
+                        <img src="@Model.images[i]" height="100" width="100" alt="Thumbnail" />
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => Model.boards[i].Title)
+                    </td>
+                    <td>
+                        <a asp-action="Draw" asp-route-id="@Model.boards[i].Id" class="btn btn-outline-secondary">Join</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<div class="add-button-footer">
+    <div class="circle-button">
+        <a href="@Url.Action("Create", "Board")">
+            <i class="fas fa-plus"></i>
+            <span class="hint">Add Board</span>
+        </a>
+    </div>
+</div>

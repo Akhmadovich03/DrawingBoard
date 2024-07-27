@@ -1,0 +1,169 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+.board-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center; /* Centering the boards under the header */
+    margin-top: 20px;
+}
+
+.board-item {
+    width: 200px; /* Adjust width as needed */
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.2s;
+    background-color: #f8f8f8; /* Ensure background color */
+    padding: 10px;
+}
+
+    .board-item:hover {
+        transform: scale(1.05);
+    }
+
+.board-thumbnail {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.board-caption {
+    margin-top: 10px; /* Add margin to separate image and caption */
+    font-weight: bold;
+}
+
+.drawing-board-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.toolbar {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px;
+    background-color: #333;
+    color: #fff;
+}
+
+canvas {
+    flex-grow: 1;
+    height: 90%;
+    border: 1px solid #000;
+}
+
+.draw-buttons {
+    margin-left: 30px;
+    margin-right: 30px;
+    background-color: transparent;
+    border: none;
+}
+
+.board-list-header {
+    top: 20px;
+    position: absolute;
+    float: none;
+    height: 50px;
+    z-index: 985;
+}
+
+.back-button-container {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+
+.add-button-footer {
+    position: absolute;
+    right: 70px;
+    bottom: 20px;
+    float: none;
+    height: 50px;
+    z-index: 985;
+}
+
+.circle-button {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    background-color: #fff;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: box-shadow 0.3s, transform 0.3s;
+    color: black;
+    font-size: 24px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+    .circle-button:hover {
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        transform: translateY(-2px);
+    }
+
+.hint {
+    position: absolute;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+}
+
+.circle-button:hover .hint {
+    visibility: visible;
+    opacity: 1;
+}
+
+.create-container {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 850px;
+    max-width: 400px;
+    margin-left: 35%;
+    margin-top: 15%;
+}
+
+    .create-container .btn-create {
+        background: linear-gradient(to right, #3a7bd5, #3a6073);
+        border: none;
+        color: white;
+    }
+
+        .create-container .btn-create:hover {
+            background: linear-gradient(to right, #3a6073, #3a7bd5);
+        }
