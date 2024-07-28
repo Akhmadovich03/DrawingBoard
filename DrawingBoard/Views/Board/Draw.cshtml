@@ -113,6 +113,8 @@
         drawing = false;
         context.closePath();
 
+        const color = tool === "eraser" ? "#FFFFFF" : colorPicker.value;
+
         const currentX = e.clientX - canvas.offsetLeft;
         const currentY = e.clientY - canvas.offsetTop;
 
@@ -123,7 +125,7 @@
                 startY,
                 endX: currentX,
                 endY: currentY,
-                color: tool === "eraser" ? "#FFFFFF" : colorPicker.value,
+                color: color,
                 lineWidth: sizeSlider.value
             });
             redrawSavedShapes();
@@ -131,7 +133,7 @@
 
         const drawingData = {
             tool,
-            color: colorPicker.value,
+            color: color,
             lineWidth: context.lineWidth,
             startX,
             startY,
@@ -162,7 +164,7 @@
 
             const drawingData = {
                 tool,
-                color: colorPicker.value,
+                color: context.strokeStyle,
                 lineWidth: context.lineWidth,
                 startX,
                 startY,
