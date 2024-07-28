@@ -28,9 +28,6 @@
         <button class="draw-buttons" id="eraser">
             <i class="bi bi-eraser-fill"></i>
         </button>
-        <button class="draw-buttons" id="text">
-            <i class="bi bi-type"></i>
-        </button>
         <input type="range" id="sizeSlider" min="1" max="20" step="1" value="1">
         <input type="color" id="colorPicker" value="#000000" />
         <button class="btn btn-outline-success" style="margin-left:40px" id="save">Save</button>
@@ -43,7 +40,7 @@
     <canvas id="drawingCanvas"></canvas>
     <form id="saveForm" method="post" asp-action="SaveDrawing" asp-controller="Board" enctype="multipart/form-data">
         <input type="hidden" name="boardId" value="@Model.Id" />
-    </form> 
+    </form>
 </div>
 
 <script>
