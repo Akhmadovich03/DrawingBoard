@@ -8,4 +8,9 @@ public class BoardHub : Hub
     {
         await Clients.Others.SendAsync("ReceiveDrawing", user, drawingData);
     }
+
+    public async Task ClearBoard()
+    {
+        await Clients.All.SendAsync("BoardCleared");
+    }
 }

@@ -10,7 +10,7 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.Services.AddSignalR();
+        builder.Services.AddSignalR().AddAzureSignalR(builder.Configuration.GetConnectionString("AzureSignalRConnectionString"));
         builder.Services.AddControllersWithViews();
         builder.Services.AddDbContext<BoardDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("AppConnectionString")));

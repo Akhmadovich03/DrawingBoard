@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using SkiaSharp;
 using System.Text.Json;
 using System.Net.Mime;
+using Microsoft.AspNetCore.SignalR;
 
 namespace DrawingBoard.Controllers;
 
